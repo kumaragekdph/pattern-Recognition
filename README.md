@@ -1,3 +1,1 @@
-This repository contains a comprehensive Python project focused on building and evaluating convolutional neural networks (CNNs) for handwritten digit classification using the MNIST dataset. The project showcases a variety of machine learning techniques, starting from custom CNN architectures to leveraging advanced pre-trained models like ResNet50 and DenseNet121 for transfer learning.
 
-The implementation is designed to be modular, allowing users to experiment with different architectures, training parameters, and evaluation strategies. It also includes data preprocessing, model training, and visualization techniques to provide a deeper understanding of CNNs and their performance on image classification tasks.
