@@ -1,0 +1,250 @@
+#Import Modules
+import pandas as pd
+import tensorflow as tf
+from sklearn.model_selection import train_test_split
+import matplotlib.pyplot as plt
+from tensorflow import keras
+
+
+# Load the MNIST dataset
+mnist = tf.keras.datasets.mnist
+(x_full, y_full), (x_test, y_test) = mnist.load_data()
+
+# Normalizing the data
+x_full, x_test = x_full / 255.0, x_test / 255.0
+
+# Splitting the full dataset into training and remaining sets (60% training, 40% remaining)
+x_train, x_remaining, y_train, y_remaining = train_test_split(x_full, y_full, test_size=0.4, random_state=42)
+
+# shape of the first image in the training set
+print("First image shape:", x_train[0].shape)
+
+# ting the remaining set into validation and testing sets (50% validation, 50% testing)
+x_val, x_test, y_val, y_test = train_test_split(x_remaining, y_remaining, test_size=0.5, random_state=42)
+
+print("Training data:", x_train.shape)
+print("Validation data:", x_val.shape)
+print("Testing data:", x_test.shape)
+
+
+# plot images
+def plot_images(images, labels, num_images=15): # plot frist 15 images
+    plt.figure(figsize=(13, 2))
+    for i in range(num_images):
+        plt.subplot(1, num_images, i + 1)
+        plt.imshow(images[i], cmap='gray')
+        plt.title(f"Label: {labels[i]}")
+        plt.axis('off')
+    plt.show()
+
+plot_images(x_train, y_train)
+
+#Building CNN Model
+
+model = keras.models.Sequential([
+    keras.layers.Conv2D(64, 7, activation="relu", padding="same", input_shape=[28, 28, 1]),
+    keras.layers.MaxPooling2D(2),
+    keras.layers.Conv2D(128, 3, activation="relu", padding="same"),
+    keras.layers.MaxPooling2D(2),
+    keras.layers.Flatten(),
+    keras.layers.Dense(64, activation="relu"),
+    keras.layers.Dropout(0.5),
+    keras.layers.Dense(10, activation="softmax")
+])
+
+model.summary()
+
+
+from tensorflow.keras import layers, models
+import matplotlib.pyplot as plt
+
+# Compile the model
+model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
+              loss='sparse_categorical_crossentropy',
+              metrics=['accuracy'])
+
+# Train the model
+history = model.fit(x_train, y_train, epochs=20, validation_data=(x_val, y_val))
+
+# Plot training and validation loss
+plt.plot(history.history['loss'], label='Training Loss')
+plt.plot(history.history['val_loss'], label='Validation Loss')
+plt.xlabel('Epoch')
+plt.ylabel('Loss')
+plt.legend()
+plt.show()
+
+
+from sklearn.metrics import confusion_matrix, precision_score, recall_score
+
+# Evaluate the model based on the training data
+train_loss, train_accuracy = model.evaluate(x_train, y_train, verbose=0)
+print(f"Training Accuracy: {train_accuracy:.4f}")
+
+# Evaluate the model based on the testing data
+test_loss, test_accuracy = model.evaluate(x_test, y_test, verbose=0)
+print(f"Testing Accuracy: {test_accuracy:.4f}")
+
+# Predict the labels for the testing data
+y_pred = model.predict(x_test)
+y_pred_classes = tf.argmax(y_pred, axis=1)
+
+# Confusion matrix
+conf_matrix = confusion_matrix(y_test, y_pred_classes)
+print("Confusion Matrix:")
+print(conf_matrix)
+
+# Precision and recall
+precision = precision_score(y_test, y_pred_classes, average='weighted')
+recall = recall_score(y_test, y_pred_classes, average='weighted')
+print(f"Precision: {precision:.4f}")
+print(f"Recall: {recall:.4f}")
+
+# F1 score
+F1 = (2*precision*recall)/(precision+recall)
+print(f"F1-Score: {F1:.4f}")
+
+
+def Train_Plot(L_rate, epochs):
+  model = keras.models.Sequential([
+      keras.layers.Conv2D(64, 7, activation="relu", padding="same", input_shape=[28, 28, 1]),
+      keras.layers.MaxPooling2D(2),
+      keras.layers.Conv2D(128, 3, activation="relu", padding="same"),
+      keras.layers.MaxPooling2D(2),
+      keras.layers.Flatten(),
+      keras.layers.Dense(64, activation="relu"),
+      keras.layers.Dropout(0.5),
+      keras.layers.Dense(10, activation="softmax")
+  ])
+
+  # Compile the model
+  model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=L_rate),
+                loss='sparse_categorical_crossentropy',
+                metrics=['accuracy'])
+
+  # Train the model
+  history = model.fit(x_train, y_train, epochs=epochs, validation_data=(x_val, y_val))
+
+  # Plot training and validation loss
+  plt.plot(history.history['loss'], label='Training Loss')
+  plt.plot(history.history['val_loss'], label='Validation Loss')
+  plt.title(f'Training and Validation Loss\nLearning Rate = {L_rate}')
+  plt.xlabel('Epoch')
+  plt.ylabel('Loss')
+  plt.legend()
+  plt.show()
+
+  # Evaluate the model based on the training data
+  train_loss, train_accuracy = model.evaluate(x_train, y_train, verbose=0)
+  print(f"Training Accuracy: {train_accuracy:.4f}")
+
+  # Evaluate the model based on the testing data
+  test_loss, test_accuracy = model.evaluate(x_test, y_test, verbose=0)
+  print(f"Testing Accuracy: {test_accuracy:.4f}")
+
+  # Predict the labels for the testing data
+  y_pred = model.predict(x_test)
+  y_pred_classes = tf.argmax(y_pred, axis=1)
+
+  # Confusion matrix
+  conf_matrix = confusion_matrix(y_test, y_pred_classes)
+  print("Confusion Matrix:")
+  print(conf_matrix)
+
+  # Precision and recall
+  precision = precision_score(y_test, y_pred_classes, average='weighted')
+  recall = recall_score(y_test, y_pred_classes, average='weighted')
+  print(f"Precision: {precision:.4f}")
+  print(f"Recall: {recall:.4f}")
+
+  # F1 score
+  F1 = (2*precision*recall)/(precision+recall)
+  print(f"F1-Score: {F1:.4f}")
+
+
+for Learning_Rate in (0.0001, 0.01, 0.1):
+    Train_Plot(Learning_Rate, 20)
+
+
+# Resize and convert images
+def preprocess_images(images):
+    images = tf.expand_dims(images, axis=-1) if len(images.shape) == 3 else images
+    images_resized = tf.image.resize(images, [32, 32])
+    images_rgb = tf.image.grayscale_to_rgb(images_resized)
+    return images_rgb
+
+x_train_resized = preprocess_images(x_train)
+x_val_resized = preprocess_images(x_val)
+x_test_resized = preprocess_images(x_test)
+
+# Print the shapes
+print("Training data shape after resizing:", x_train_resized.shape)
+print("Validation data shape after resizing:", x_val_resized.shape)
+print("Testing data shape after resizing:", x_test_resized.shape)
+
+
+from tensorflow.keras.applications import ResNet50
+
+# Load the pre-trained ResNet50 model
+base_model = ResNet50(weights='imagenet', include_top=False, input_shape=(32, 32, 3))
+
+# Freeze the base model
+base_model.trainable = False
+
+# Creating a new model
+model = models.Sequential([
+    base_model,
+    layers.GlobalAveragePooling2D(),
+    layers.Dense(128, activation='relu'),
+    layers.Dropout(0.5),
+    layers.Dense(10, activation='softmax')
+])
+
+# Compiling the model
+model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
+              loss='sparse_categorical_crossentropy',
+              metrics=['accuracy'])
+
+# Training the model
+history = model.fit(x_train_resized, y_train, epochs=20, validation_data=(x_val_resized, y_val))
+
+# Evaluating the model
+train_loss, train_accuracy = model.evaluate(x_train_resized, y_train, verbose=0)
+test_loss, test_accuracy = model.evaluate(x_test_resized, y_test, verbose=0)
+print(f"Training Accuracy: {train_accuracy:.4f}")
+print(f"Testing Accuracy: {test_accuracy:.4f}")
+
+
+from tensorflow.keras.applications import DenseNet121
+
+# Loading the pre-trained DenseNet121 model
+base_model = DenseNet121(weights='imagenet', include_top=False, input_shape=(32, 32, 3))
+
+# Freezing the base model
+base_model.trainable = False
+
+# Creating a new model
+model = models.Sequential([
+    base_model,
+    layers.GlobalAveragePooling2D(),
+    layers.Dense(128, activation='relu'),
+    layers.Dropout(0.5),
+    layers.Dense(10, activation='softmax')
+])
+
+# Compiling the model
+model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
+              loss='sparse_categorical_crossentropy',
+              metrics=['accuracy'])
+
+# Training the model
+history = model.fit(x_train_resized, y_train, epochs=20, validation_data=(x_val_resized, y_val))
+
+# Evaluating the model
+train_loss, train_accuracy = model.evaluate(x_train_resized, y_train, verbose=0)
+test_loss, test_accuracy = model.evaluate(x_test_resized, y_test, verbose=0)
+print(f"Training Accuracy: {train_accuracy:.4f}")
+print(f"Testing Accuracy: {test_accuracy:.4f}")
+
+
+
